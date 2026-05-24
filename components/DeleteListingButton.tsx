@@ -1,11 +1,10 @@
 "use client";
 
-import { useSupabase } from "@/lib/supabase/client";
+import { createClient } from "@/lib/supabase/client";
 import { Trash2 } from "lucide-react";
 import { useState } from "react";
 
 export default function DeleteListingButton({ id }: { id: string }) {
-  const { getClient } = useSupabase();
   const [isDeleting, setIsDeleting] = useState(false);
 
   const handleDelete = async () => {
@@ -13,7 +12,7 @@ export default function DeleteListingButton({ id }: { id: string }) {
 
   setIsDeleting(true);
   try {
-  const supabase = await getClient();
+  const supabase = createClient();
   const { error } = await supabase.from("listings").delete().eq("id", id);
   if (error) throw error;
   window.location.reload();

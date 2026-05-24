@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { useSupabase } from "@/lib/supabase/client";
+import { createClient } from "@/lib/supabase/client";
 import { X, Upload, CreditCard, Sparkles, Phone } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -17,8 +17,6 @@ const UPI_ID = process.env.NEXT_PUBLIC_UPI_ID || "yourname@upi";
 const CONTACT_NUMBER = process.env.NEXT_PUBLIC_CONTACT_NUMBER || "+918999150333";
 
 export default function PaymentModal({ listingId, onClose, onSuccess }: PaymentModalProps) {
-  const { getClient } = useSupabase();
-
   const [isFeatured, setIsFeatured] = useState(false);
   const [screenshot, setScreenshot] = useState<File | null>(null);
   const [screenshotPreview, setScreenshotPreview] = useState<string | null>(null);
@@ -57,7 +55,7 @@ export default function PaymentModal({ listingId, onClose, onSuccess }: PaymentM
   setError("");
 
   try {
-  const supabase = await getClient();
+  const supabase = createClient();
 
   // Upload screenshot
   const fileExt = screenshot.name.split(".").pop();

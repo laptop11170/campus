@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
-import { useSupabase } from "@/lib/supabase/client";
+import { createClient } from "@/lib/supabase/client";
 import { Listing } from "@/types";
 import StatusBadge from "@/components/StatusBadge";
 import { formatCurrency, formatDate } from "@/lib/utils";
@@ -17,11 +17,10 @@ export default function AdminListingDetailPage() {
   const [rejectReason, setRejectReason] = useState("");
   const [showRejectInput, setShowRejectInput] = useState(false);
 
-  const { getClient } = useSupabase();
   const id = params.id as string;
 
   const fetchListing = useCallback(async () => {
-  const supabase = await getClient();
+  const supabase = createClient();
   const { data } = await supabase
   .from("listings")
   .select(`*, profiles (id, full_name, avatar_url, email, role, created_at)`)
@@ -29,14 +28,14 @@ export default function AdminListingDetailPage() {
   .single();
   setListing(data);
   setLoading(false);
-  }, [id, getClient]);
+  }, [id]);
 
   useEffect(() => {
   fetchListing();
   }, [fetchListing]);
 
   const handleApprove = async () => {
-  const supabase = await getClient();
+  const supabase = createClient();
   const { error } = await supabase
   .from("listings")
   .update({ status: "approved" })
@@ -46,7 +45,7 @@ export default function AdminListingDetailPage() {
 
   const handleReject = async () => {
   if (!rejectReason.trim()) return;
-  const supabase = await getClient();
+  const supabase = createClient();
   const { error } = await supabase
   .from("listings")
   .update({ status: "rejected", rejection_reason: rejectReason })
@@ -60,7 +59,7 @@ export default function AdminListingDetailPage() {
 
   const handleToggleFeatured = async () => {
   if (!listing) return;
-  const supabase = await getClient();
+  const supabase = createClient();
   const { error } = await supabase
   .from("listings")
   .update({ is_featured: !listing.is_featured })
@@ -70,7 +69,7 @@ export default function AdminListingDetailPage() {
 
   const handleDelete = async () => {
   if (!confirm("Delete this listing permanently?")) return;
-  const supabase = await getClient();
+  const supabase = createClient();
   await supabase.from("listings").delete().eq("id", id);
   router.push("/admin/listings");
   };

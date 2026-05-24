@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { useSupabase } from "@/lib/supabase/client";
+import { createClient } from "@/lib/supabase/client";
 import { Listing, ListingStatus } from "@/types";
 import AdminTable from "@/components/AdminTable";
 import { Filter } from "lucide-react";
@@ -12,13 +12,11 @@ export default function AdminListingsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const { getClient } = useSupabase();
-
   const fetchListings = useCallback(async () => {
   setLoading(true);
   setError("");
 
-  const supabase = await getClient();
+  const supabase = createClient();
 
   let query = supabase
   .from("listings")
@@ -37,14 +35,14 @@ export default function AdminListingsPage() {
   setListings(data || []);
   }
   setLoading(false);
-  }, [filter, getClient]);
+  }, [filter]);
 
   useEffect(() => {
   fetchListings();
   }, [fetchListings]);
 
   const handleApprove = async (id: string) => {
-  const supabase = await getClient();
+  const supabase = createClient();
   const { error } = await supabase
   .from("listings")
   .update({ status: "approved" })
@@ -54,7 +52,7 @@ export default function AdminListingsPage() {
   };
 
   const handleReject = async (id: string, reason: string) => {
-  const supabase = await getClient();
+  const supabase = createClient();
   const { error } = await supabase
   .from("listings")
   .update({ status: "rejected", rejection_reason: reason })
@@ -64,7 +62,7 @@ export default function AdminListingsPage() {
   };
 
   const handleToggleFeatured = async (id: string, featured: boolean) => {
-  const supabase = await getClient();
+  const supabase = createClient();
   const { error } = await supabase
   .from("listings")
   .update({ is_featured: featured })
@@ -75,7 +73,7 @@ export default function AdminListingsPage() {
 
   const handleDelete = async (id: string) => {
   if (!confirm("Delete this listing permanently?")) return;
-  const supabase = await getClient();
+  const supabase = createClient();
   const { error } = await supabase.from("listings").delete().eq("id", id);
   if (!error) fetchListings();
   };

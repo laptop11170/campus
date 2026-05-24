@@ -2,7 +2,7 @@
 
 import { useState, useRef } from "react";
 import { useAuth } from "@clerk/nextjs";
-import { useSupabase } from "@/lib/supabase/client";
+import { createClient } from "@/lib/supabase/client";
 import { X, ImageIcon } from "lucide-react";
 import { Category } from "@/types";
 import PaymentModal from "./PaymentModal";
@@ -15,7 +15,6 @@ const categories: { value: Category; label: string }[] = [
 
 export default function ListingForm() {
   const { isSignedIn, userId } = useAuth();
-  const { getClient } = useSupabase();
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -67,7 +66,7 @@ export default function ListingForm() {
   setError("");
 
   try {
-  const supabase = await getClient();
+  const supabase = createClient();
 
   let photoUrl: string | null = null;
 
