@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { createServerClient } from "@/lib/supabase/server";
 import { auth } from "@clerk/nextjs/server";
 import { Listing } from "@/types";

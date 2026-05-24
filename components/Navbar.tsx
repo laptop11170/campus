@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { useAuth } from "@clerk/nextjs";
+import { useAuth, UserButton } from "@clerk/nextjs";
 import { Menu, X, Store, LayoutDashboard, Shield, LogIn } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -63,12 +63,7 @@ export default function Navbar({ isAdmin = false }: NavbarProps) {
   {/* Auth */}
   <div className="hidden md:flex items-center gap-2">
   {isSignedIn ? (
-  <Link
-  href="/user"
-  className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-accent text-white rounded-input hover:bg-accent-hover transition-colors"
-  >
-  Account
-  </Link>
+  <UserButton />
   ) : (
   <Link
   href="/login"
@@ -111,13 +106,9 @@ export default function Navbar({ isAdmin = false }: NavbarProps) {
   </Link>
   ))}
   {isSignedIn ? (
-  <Link
-  href="/user"
-  onClick={() => setMobileOpen(false)}
-  className="flex w-full items-center gap-2 px-3 py-2 text-sm font-medium text-accent"
-  >
-  Account
-  </Link>
+  <div className="px-3 py-2">
+  <UserButton />
+  </div>
   ) : (
   <Link
   href="/login"
