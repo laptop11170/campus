@@ -1,3 +1,4 @@
+import { NextResponse } from "next/server";
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { createServerClient } from "./lib/supabase/server";
 
@@ -8,7 +9,7 @@ export default clerkMiddleware(async (auth, req) => {
   if (isAdminRoute(req)) {
   const { userId } = await auth();
   if (!userId) {
-  return Response.redirect(new URL("/login", req.url));
+  return NextResponse.redirect(new URL("/login", req.url));
   }
 
   const supabase = createServerClient();
@@ -19,14 +20,14 @@ export default clerkMiddleware(async (auth, req) => {
   .single();
 
   if (!profile || profile.role !== "admin") {
-  return Response.redirect(new URL("/", req.url));
+  return NextResponse.redirect(new URL("/", req.url));
   }
   }
 
   if (isAuthRoute(req)) {
   const { userId } = await auth();
   if (!userId) {
-  return Response.redirect(new URL("/login", req.url));
+  return NextResponse.redirect(new URL("/login", req.url));
   }
   }
 });
