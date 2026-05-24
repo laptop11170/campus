@@ -9,19 +9,25 @@ export default clerkMiddleware(async (auth, req) => {
   if (isAdminRoute(req)) {
   const { userId } = await auth();
   if (!userId) {
+  console.log("[Middleware] Admin route — no userId, redirecting to /login");
   return NextResponse.redirect(new URL("/login", req.url));
   }
 
   const supabase = createServerClient();
-  const { data: profile } = await supabase
+  const { data: profile, error } = await supabase
   .from("profiles")
   .select("role")
   .eq("id", userId)
   .single();
 
+  console.log("[Middleware] Admin check:", { userId, role: profile?.role, error: error?.message });
+
   if (!profile || profile.role !== "admin") {
+  console.log("[Middleware] Not admin — redirecting to /");
   return NextResponse.redirect(new URL("/", req.url));
   }
+
+  console.log("[Middleware] Admin verified — allowing access");
   }
 
   if (isAuthRoute(req)) {
