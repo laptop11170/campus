@@ -14,13 +14,38 @@ export default clerkMiddleware(async (auth, req) => {
   }
 
   const supabase = createServerClient();
-  const { data: profile, error } = await supabase
+
+  // Try by user ID first
+  let { data: profile, error } = await supabase
   .from("profiles")
   .select("role")
   .eq("id", userId)
   .single();
 
-  console.log("[Middleware] Admin check:", { userId, role: profile?.role, error: error?.message });
+  // If not found, try by email (handles clerk ID mismatch)
+  if (!profile) {
+  const { sessionClaims } = await auth();
+  const email = sessionClaims?.email as string | undefined;
+  if (email) {
+  const { data: byEmail, error: emailErr } = await supabase
+  .from("profiles")
+  .select("role")
+  .eq("email", email)
+  .single();
+  if (byEmail) {
+  profile = byEmail;
+  console.log("[Middleware] Admin check (by email):", { email, role: profile.role });
+  } else if (emailErr) {
+  console.log("[Middleware] Admin check email error:", emailErr.message);
+  }
+  }
+  } else {
+  console.log("[Middleware] Admin check (by userId):", { userId, role: profile.role });
+  }
+
+  if (error && error.code !== "PGRST116") {
+  console.log("[Middleware] Admin check error:", error.message);
+  }
 
   if (!profile || profile.role !== "admin") {
   console.log("[Middleware] Not admin — redirecting to /");

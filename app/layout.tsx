@@ -25,11 +25,24 @@ export default async function RootLayout({
 
   if (user) {
   const supabase = createServerClient();
-  const { data: profile } = await supabase
+
+  // Try by user ID first
+  let { data: profile } = await supabase
   .from("profiles")
   .select("role")
   .eq("id", user.id)
   .single();
+
+  // Fallback: check by email for Clerk ID mismatch
+  if (!profile && user.emailAddresses?.[0]?.emailAddress) {
+  const { data: byEmail } = await supabase
+  .from("profiles")
+  .select("role")
+  .eq("email", user.emailAddresses[0].emailAddress)
+  .single();
+  profile = byEmail || null;
+  }
+
   isAdmin = profile?.role === "admin";
   }
 
