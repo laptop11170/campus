@@ -17,12 +17,31 @@ export default async function DashboardPage() {
   }
 
   const supabase = createServerClient();
-  const { data: listingsData } = await supabase
-  .from("listings")
-  .select("*")
-  .eq("user_id", userId)
-  .order("created_at", { ascending: false });
 
+  // Old listings may have user_id from pre-Clerk Supabase Auth UUIDs.
+  // Gather all profile IDs that share the current user's email so we
+  // can fetch listings across auth migrations.
+  const { data: myProfile } = await supabase
+  .from("profiles")
+  .select("email")
+  .eq("id", userId)
+  .single();
+
+  let listingsQuery = supabase.from("listings").select("*");
+
+  if (myProfile?.email) {
+  const { data: matchingProfiles } = await supabase
+  .from("profiles")
+  .select("id")
+  .eq("email", myProfile.email);
+
+  const ids = [...new Set([userId, ...(matchingProfiles?.map((p) => p.id) || [])])];
+  listingsQuery = listingsQuery.in("user_id", ids);
+  } else {
+  listingsQuery = listingsQuery.eq("user_id", userId);
+  }
+
+  const { data: listingsData } = await listingsQuery.order("created_at", { ascending: false });
   const listings = listingsData || [];
 
   const pending = listings.filter((l: Listing) => l.status === "pending");

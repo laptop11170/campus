@@ -12,7 +12,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
 
   let query = supabase
   .from("listings")
-  .select(`*, profiles (id, full_name, avatar_url, email, role, created_at)`)
+  .select("*")
   .eq("status", "approved")
   .order("is_featured", { ascending: false })
   .order("created_at", { ascending: false });
@@ -23,6 +23,14 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
 
   const { data: listingsData } = await query;
   const listings = listingsData || [];
+
+  // FK join is broken in schema cache; fetch profiles separately and match manually
+  const { data: profilesData } = await supabase.from("profiles").select("*");
+  const profilesMap = new Map(profilesData?.map((p) => [p.id, p]) || []);
+  const listingsWithProfiles = listings.map((l) => ({
+  ...l,
+  profiles: profilesMap.get(l.user_id) || undefined,
+  }));
 
   return (
   <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -64,9 +72,9 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
   <CategoryTabsWrapper activeCategory={activeCategory || "all"} />
   </div>
 
-  {listings.length > 0 ? (
+  {listingsWithProfiles.length > 0 ? (
   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-  {listings.map((listing) => (
+  {listingsWithProfiles.map((listing) => (
   <ListingCard key={listing.id} listing={listing} />
   ))}
   </div>

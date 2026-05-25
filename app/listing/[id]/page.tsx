@@ -12,9 +12,20 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
 
   const { data: listing } = await supabase
   .from("listings")
-  .select(`*, profiles (id, full_name, avatar_url, email, role, created_at)`)
+  .select("*")
   .eq("id", id)
   .single();
+
+  if (listing) {
+  const { data: profile } = await supabase
+  .from("profiles")
+  .select("*")
+  .eq("id", listing.user_id)
+  .single();
+  if (profile) {
+  (listing as any).profiles = profile;
+  }
+  }
 
   if (!listing) {
   return (

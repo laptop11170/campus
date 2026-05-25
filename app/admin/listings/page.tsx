@@ -18,21 +18,28 @@ export default function AdminListingsPage() {
 
   const supabase = createClient();
 
+  // Fetch listings and profiles separately since FK join is broken in schema cache
   let query = supabase
   .from("listings")
-  .select(`*, profiles (id, full_name, avatar_url, email, role, created_at)`)
+  .select("*")
   .order("created_at", { ascending: false });
 
   if (filter !== "all") {
   query = query.eq("status", filter);
   }
 
-  const { data, error } = await query;
+  const { data: listingsData, error: listingsError } = await query;
+  const { data: profilesData } = await supabase.from("profiles").select("*");
 
-  if (error) {
-  setError(error.message);
+  if (listingsError) {
+  setError(listingsError.message);
   } else {
-  setListings(data || []);
+  const profilesMap = new Map(profilesData?.map((p) => [p.id, p]) || []);
+  const merged = (listingsData || []).map((l) => ({
+  ...l,
+  profiles: profilesMap.get(l.user_id) || undefined,
+  }));
+  setListings(merged);
   }
   setLoading(false);
   }, [filter]);

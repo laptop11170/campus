@@ -23,10 +23,24 @@ export default function AdminListingDetailPage() {
   const supabase = createClient();
   const { data } = await supabase
   .from("listings")
-  .select(`*, profiles (id, full_name, avatar_url, email, role, created_at)`)
+  .select("*")
   .eq("id", id)
   .single();
+
+  if (data) {
+  const { data: profile } = await supabase
+  .from("profiles")
+  .select("*")
+  .eq("id", data.user_id)
+  .single();
+  if (profile) {
+  setListing({ ...data, profiles: profile });
+  } else {
   setListing(data);
+  }
+  } else {
+  setListing(data);
+  }
   setLoading(false);
   }, [id]);
 

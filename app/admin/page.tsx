@@ -19,10 +19,17 @@ export default async function AdminDashboard() {
 
   const { data: listingsData } = await supabase
   .from("listings")
-  .select(`*, profiles (id, full_name, avatar_url, email, role, created_at)`)
+  .select("*")
   .order("created_at", { ascending: false });
 
   const listings = listingsData || [];
+
+  // FK join is broken in schema cache; fetch profiles separately and match manually
+  const { data: profilesData } = await supabase.from("profiles").select("*");
+  const profilesMap = new Map(profilesData?.map((p) => [p.id, p]) || []);
+  for (const l of listings) {
+  (l as any).profiles = profilesMap.get(l.user_id) || undefined;
+  }
   const total = listings.length;
   const pending = listings.filter((l) => l.status === "pending");
   const approved = listings.filter((l) => l.status === "approved").length;
