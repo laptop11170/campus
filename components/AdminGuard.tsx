@@ -6,12 +6,16 @@ import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 
 export default function AdminGuard({ children }: { children: React.ReactNode }) {
-  const { isSignedIn, userId } = useAuth();
+  const { isLoaded, isSignedIn, userId } = useAuth();
   const { user } = useUser();
   const router = useRouter();
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
 
   useEffect(() => {
+  // Wait for Clerk to finish loading before making any decisions
+  if (!isLoaded) return;
+
+  // Clerk loaded but not signed in — redirect to login
   if (!isSignedIn || !userId) {
   router.replace("/login");
   return;
@@ -52,9 +56,10 @@ export default function AdminGuard({ children }: { children: React.ReactNode }) 
   };
 
   checkAdmin();
-  }, [isSignedIn, userId, user, router]);
+  }, [isLoaded, isSignedIn, userId, user, router]);
 
-  if (isAdmin === null) {
+  // Show spinner while Clerk is loading OR while checking admin status
+  if (!isLoaded || isAdmin === null) {
   return (
   <div className="max-w-4xl mx-auto px-4 py-20 text-center">
   <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin mx-auto" />
