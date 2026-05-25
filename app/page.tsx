@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { createServerClient } from "@/lib/supabase/server";
 import { Category } from "@/types";
 import ListingCard from "@/components/ListingCard";
