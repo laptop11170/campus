@@ -1,10 +1,9 @@
-import { requireAdmin } from "@/lib/admin";
+import AdminGuard from "@/components/AdminGuard";
 
-export default async function AdminLayout({
+export default function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  await requireAdmin();
-  return <>{children}</>;
+  return <AdminGuard>{children}</AdminGuard>;
 }

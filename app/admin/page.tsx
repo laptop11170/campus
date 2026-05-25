@@ -1,7 +1,6 @@
 export const dynamic = "force-dynamic";
 
 import { createServerClient } from "@/lib/supabase/server";
-import { requireAdmin } from "@/lib/admin";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -16,7 +15,6 @@ import StatusBadge from "@/components/StatusBadge";
 import { formatDate, formatCurrency } from "@/lib/utils";
 
 export default async function AdminDashboard() {
-  await requireAdmin();
   const supabase = createServerClient();
 
   const { data: listingsData } = await supabase
