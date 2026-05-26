@@ -3,19 +3,20 @@
 import { useState, useRef } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { createClient } from "@/lib/supabase/client";
-import { X, ImageIcon } from "lucide-react";
+import { X, ImageIcon, Plus } from "lucide-react";
 import { Category } from "@/types";
 import PaymentModal from "./PaymentModal";
 
-const categories: { value: Category; label: string }[] = [
-  { value: "product", label: "Product" },
-  { value: "service", label: "Service" },
-  { value: "event", label: "Event" },
+const categories: { value: Category; label: string; glyph: string; desc: string }[] = [
+  { value: "product", label: "Marketplace", glyph: "🛒", desc: "A physical item" },
+  { value: "service", label: "Services", glyph: "🔧", desc: "A skill you offer" },
+  { value: "event", label: "Events", glyph: "🎪", desc: "Fest, trek, talk, meetup" },
 ];
 
 export default function ListingForm() {
   const { isSignedIn, userId } = useAuth();
 
+  const [step, setStep] = useState(1);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState<Category>("product");
@@ -127,104 +128,94 @@ export default function ListingForm() {
   }
 
   return (
-  <form onSubmit={handleSubmit} className="space-y-5">
+  <form onSubmit={handleSubmit} className="space-y-6">
   {error && (
-  <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-input text-red-400 text-sm">
+  <div className="p-3.5 bg-danger-soft border border-danger/20 rounded-lg text-danger text-sm">
   {error}
   </div>
   )}
 
-  {/* Title */}
+  {/* Step 1: Category */}
   <div>
-  <label className="block text-sm font-medium text-primary mb-1.5">
-  Title <span className="text-red-400">*</span>
-  </label>
-  <input
-  type="text"
-  value={title}
-  onChange={(e) => setTitle(e.target.value)}
-  placeholder="e.g., TI-84 Calculator for Sale"
-  className="w-full px-4 py-2.5 bg-background border border-surface-border rounded-input text-primary placeholder:text-muted-dark focus:outline-none focus:border-accent transition-colors"
-  required
-  />
-  </div>
-
-  {/* Category */}
-  <div>
-  <label className="block text-sm font-medium text-primary mb-1.5">
-  Category <span className="text-red-400">*</span>
-  </label>
-  <div className="grid grid-cols-3 gap-2">
+  <label className="label-ui">Category <span className="text-danger">*</span></label>
+  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
   {categories.map((cat) => (
   <button
   key={cat.value}
   type="button"
   onClick={() => setCategory(cat.value)}
-  className={`px-4 py-2.5 rounded-input text-sm font-medium border transition-all ${
+  className={`card-ui p-4 text-left cursor-pointer transition-all ${
   category === cat.value
-  ? "border-accent bg-accent/10 text-accent"
-  : "border-surface-border text-muted hover:text-primary hover:border-muted-dark"
+  ? "border-accent shadow-[0_0_0_4px_var(--accent-soft)]"
+  : "hover:border-border-strong"
   }`}
   >
-  {cat.label}
+  <div className="text-2xl mb-2">{cat.glyph}</div>
+  <div className="font-semibold text-[15px]">{cat.label}</div>
+  <div className="text-text-mute text-xs mt-0.5">{cat.desc}</div>
   </button>
   ))}
   </div>
   </div>
 
-  {/* Description */}
+  {/* Step 2: Details */}
   <div>
-  <label className="block text-sm font-medium text-primary mb-1.5">
-  Description <span className="text-red-400">*</span>
-  </label>
-  <textarea
-  value={description}
-  onChange={(e) => setDescription(e.target.value)}
-  placeholder="Describe your listing in detail..."
-  rows={4}
-  className="w-full px-4 py-2.5 bg-background border border-surface-border rounded-input text-primary placeholder:text-muted-dark focus:outline-none focus:border-accent transition-colors resize-none"
+  <label className="label-ui">Title <span className="text-danger">*</span></label>
+  <input
+  type="text"
+  value={title}
+  onChange={(e) => setTitle(e.target.value)}
+  placeholder="e.g., ThinkPad T14 — barely used, 6mo old"
+  className="input-ui"
   required
   />
   </div>
 
-  {/* Price */}
-  <div className="grid grid-cols-2 gap-4">
+  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
   <div>
-  <label className="block text-sm font-medium text-primary mb-1.5">
-  Price (Rs.)
-  </label>
+  <label className="label-ui">Price (₹)</label>
   <input
   type="number"
   value={price}
   onChange={(e) => setPrice(e.target.value)}
-  placeholder="250"
+  placeholder="0"
   min="0"
   step="0.01"
-  className="w-full px-4 py-2.5 bg-background border border-surface-border rounded-input text-primary placeholder:text-muted-dark focus:outline-none focus:border-accent transition-colors"
+  className="input-ui"
   />
   </div>
   <div>
-  <label className="block text-sm font-medium text-primary mb-1.5">
-  Price Label
-  </label>
+  <label className="label-ui">Price Label</label>
   <input
   type="text"
   value={priceLabel}
   onChange={(e) => setPriceLabel(e.target.value)}
-  placeholder="Rs.250/month"
-  className="w-full px-4 py-2.5 bg-background border border-surface-border rounded-input text-primary placeholder:text-muted-dark focus:outline-none focus:border-accent transition-colors"
+  placeholder="per month, negotiable..."
+  className="input-ui"
   />
   </div>
   </div>
 
+  <div>
+  <label className="label-ui">Description <span className="text-danger">*</span></label>
+  <textarea
+  value={description}
+  onChange={(e) => setDescription(e.target.value)}
+  placeholder="Condition, why selling, where to pick up, etc."
+  rows={4}
+  className="textarea-ui"
+  required
+  />
+  </div>
+
   {/* Photo Upload */}
   <div>
-  <label className="block text-sm font-medium text-primary mb-1.5">
-  Photo
+  <label className="label-ui">
+  Photo <span className="text-text-mute font-normal text-xs ml-1">· up to 4 images, first is primary</span>
   </label>
   <div
   onClick={() => fileInputRef.current?.click()}
-  className="border-2 border-dashed border-surface-border rounded-input p-6 text-center cursor-pointer hover:border-muted-dark transition-colors"
+  className="border border-dashed border-border-strong rounded-lg p-6 text-center cursor-pointer hover:border-accent-line hover:bg-accent-soft transition-colors"
   >
   {photoPreview ? (
   <div className="relative inline-block">
@@ -240,16 +231,16 @@ export default function ListingForm() {
   setPhoto(null);
   setPhotoPreview(null);
   }}
-  className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-white"
+  className="absolute -top-2 -right-2 w-6 h-6 bg-danger rounded-full flex items-center justify-center text-white"
   >
   <X className="w-3 h-3" />
   </button>
   </div>
   ) : (
   <>
-  <ImageIcon className="w-8 h-8 text-muted mx-auto mb-2" />
-  <p className="text-sm text-muted">Click to upload a photo</p>
-  <p className="text-xs text-muted-dark mt-1">PNG, JPG up to 5MB</p>
+  <ImageIcon className="w-6 h-6 text-text-mute mx-auto mb-2" />
+  <p className="text-sm text-text-2">Drop or click to upload</p>
+  <p className="text-xs text-text-mute mt-1">PNG, JPG up to 5MB</p>
   </>
   )}
   <input
@@ -264,15 +255,13 @@ export default function ListingForm() {
 
   {/* Contact Info */}
   <div>
-  <label className="block text-sm font-medium text-primary mb-1.5">
-  Contact Info <span className="text-red-400">*</span>
-  </label>
+  <label className="label-ui">Contact Info <span className="text-danger">*</span></label>
   <input
   type="text"
   value={contactInfo}
   onChange={(e) => setContactInfo(e.target.value)}
-  placeholder="Phone, WhatsApp, or email"
-  className="w-full px-4 py-2.5 bg-background border border-surface-border rounded-input text-primary placeholder:text-muted-dark focus:outline-none focus:border-accent transition-colors"
+  placeholder="WhatsApp number or email"
+  className="input-ui"
   required
   />
   </div>
@@ -281,13 +270,19 @@ export default function ListingForm() {
   <button
   type="submit"
   disabled={isSubmitting}
-  className="w-full py-3 bg-accent text-white font-medium rounded-input hover:bg-accent-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+  className="w-full btn-primary py-3 justify-center text-base"
   >
-  {isSubmitting ? "Creating..." : "Continue to Payment"}
+  {isSubmitting ? (
+  "Creating..."
+  ) : (
+  <>
+  <Plus size={16} strokeWidth={2.5} /> Submit for review
+  </>
+  )}
   </button>
 
-  <p className="text-xs text-muted text-center">
-  Listing fee applies. You can review your listing before final submission.
+  <p className="text-xs text-text-mute text-center">
+  Each listing is reviewed by an admin before going live. Listing fee: ₹149.
   </p>
   </form>
   );

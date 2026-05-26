@@ -4,26 +4,24 @@ import { createServerClient } from "@/lib/supabase/server";
 import { auth } from "@clerk/nextjs/server";
 import { Listing } from "@/types";
 import StatusBadge from "@/components/StatusBadge";
-import { formatDate, formatCurrency } from "@/lib/utils";
+import { formatCurrency, formatDateShort } from "@/lib/utils";
 import Link from "next/link";
-import { Plus, ArrowRight, Clock, Inbox } from "lucide-react";
+import { Plus, ArrowRight, Clock, Inbox, Eye, Bookmark, Star } from "lucide-react";
 import DeleteListingButton from "@/components/DeleteListingButton";
+import Image from "next/image";
 
 export default async function DashboardPage() {
   const { userId } = await auth();
 
   if (!userId) {
-  return null; // middleware handles redirect
+  return null;
   }
 
   const supabase = createServerClient();
 
-  // Old listings may have user_id from pre-Clerk Supabase Auth UUIDs.
-  // Gather all profile IDs that share the current user's email so we
-  // can fetch listings across auth migrations.
   const { data: myProfile } = await supabase
   .from("profiles")
-  .select("email")
+  .select("email, full_name, avatar_url, role")
   .eq("id", userId)
   .single();
 
@@ -49,107 +47,141 @@ export default async function DashboardPage() {
   const rejected = listings.filter((l: Listing) => l.status === "rejected");
 
   return (
-  <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+  {/* Header */}
   <div className="flex items-center justify-between mb-8">
   <div>
-  <h1 className="text-2xl font-bold text-primary">My Listings</h1>
-  <p className="text-muted text-sm mt-1">
-  Manage your listings and track their status
-  </p>
+  <div className="eyebrow-ui">YOUR ACCOUNT</div>
+  <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight mt-1">Dashboard</h1>
   </div>
-  <Link
-  href="/list"
-  className="inline-flex items-center gap-2 px-4 py-2 bg-accent text-white text-sm font-medium rounded-input hover:bg-accent-hover transition-colors"
-  >
-  <Plus className="w-4 h-4" />
-  New Listing
+  <Link href="/list" className="btn-primary">
+  <Plus size={16} strokeWidth={2.5} /> New listing
   </Link>
   </div>
 
-  <div className="grid grid-cols-3 gap-4 mb-8">
-  <div className="bg-surface border border-surface-border rounded-card p-4">
-  <div className="text-2xl font-bold text-primary">{pending.length}</div>
-  <div className="text-sm text-muted">Pending</div>
+  {/* Stats */}
+  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+  <div className="stat-ui">
+  <div className="label">Active listings</div>
+  <div className="value">{approved.length}</div>
+  <div className="text-xs text-text-mute"><span className="text-accent">+{pending.length}</span> pending</div>
   </div>
-  <div className="bg-surface border border-surface-border rounded-card p-4">
-  <div className="text-2xl font-bold text-emerald-500">{approved.length}</div>
-  <div className="text-sm text-muted">Approved</div>
+  <div className="stat-ui">
+  <div className="label">Total listings</div>
+  <div className="value">{listings.length}</div>
+  <div className="text-xs text-text-mute">since joining</div>
   </div>
-  <div className="bg-surface border border-surface-border rounded-card p-4">
-  <div className="text-2xl font-bold text-red-500">{rejected.length}</div>
-  <div className="text-sm text-muted">Rejected</div>
+  <div className="stat-ui">
+  <div className="label">Rejected</div>
+  <div className="value text-danger">{rejected.length}</div>
+  <div className="text-xs text-text-mute">need attention</div>
+  </div>
+  <div className="stat-ui">
+  <div className="label">Featured</div>
+  <div className="value text-[#ff7ba0]">{listings.filter((l) => l.is_featured).length}</div>
+  <div className="text-xs text-text-mute">pinned listings</div>
   </div>
   </div>
 
+  {/* Listings table */}
   {listings.length > 0 ? (
-  <div className="space-y-3">
+  <div>
+  <div className="flex items-center gap-1 border-b border-border mb-4">
+  {[
+  { k: "all", label: "All", count: listings.length },
+  { k: "approved", label: "Live", count: approved.length },
+  { k: "pending", label: "Pending", count: pending.length },
+  { k: "rejected", label: "Rejected", count: rejected.length },
+  ].map((tab, i) => (
+  <button
+  key={tab.k}
+  className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+  i === 0
+  ? "text-text border-accent"
+  : "text-text-mute border-transparent hover:text-text"
+  }`}
+  >
+  {tab.label}
+  <span className="ml-2 font-mono text-[11px] text-text-mute">{tab.count}</span>
+  </button>
+  ))}
+  </div>
+
+  <div className="row-list-ui">
+  <div
+  className="row-head-ui"
+  style={{ gridTemplateColumns: "52px 1.6fr 100px 110px 100px 100px 90px" }}
+  >
+  <div></div>
+  <div>Listing</div>
+  <div>Tier</div>
+  <div>Status</div>
+  <div>Views</div>
+  <div>Price</div>
+  <div></div>
+  </div>
   {listings.map((listing: Listing) => (
   <div
   key={listing.id}
-  className="bg-surface border border-surface-border rounded-card p-4 flex items-center gap-4"
+  className="row-ui cursor-pointer"
+  style={{ gridTemplateColumns: "52px 1.6fr 100px 110px 100px 100px 90px" }}
   >
-  <div className="flex-1 min-w-0">
-  <div className="flex items-center gap-2 mb-1">
-  <Link
-  href={`/listing/${listing.id}`}
-  className="font-medium text-primary hover:text-accent transition-colors truncate"
+  <div
+  className={`thumb-tiny ${listing.category} w-11 h-11 text-lg`}
   >
-  {listing.title}
-  </Link>
+  {listing.category === "product" ? "🛒" : listing.category === "service" ? "🔧" : listing.category === "event" ? "🎪" : "📚"}
+  </div>
+  <div className="min-w-0">
+  <div className="font-medium text-sm truncate">{listing.title}</div>
+  <div className="text-text-mute text-xs font-mono mt-0.5">
+  {listing.category} · {formatDateShort(listing.created_at)}
+  </div>
+  </div>
+  <div className="flex items-center">
+  {listing.is_featured ? (
+  <span className="chip-ui chip-featured">Featured</span>
+  ) : (
+  <span className="chip-ui">Standard</span>
+  )}
+  </div>
+  <div>
   <StatusBadge status={listing.status} />
-  {listing.is_featured && (
-  <span className="text-xs text-accent font-medium">Featured</span>
-  )}
   </div>
-  <div className="flex items-center gap-3 text-sm text-muted">
-  <span className="capitalize">{listing.category}</span>
-  <span>•</span>
-  <span>{listing.price_label || formatCurrency(listing.price)}</span>
-  <span>•</span>
-  <span>{formatDate(listing.created_at)}</span>
+  <div className="font-mono text-sm text-text-2">
+  --
   </div>
-  {listing.rejection_reason && (
-  <p className="text-sm text-red-400 mt-1">
-  Reason: {listing.rejection_reason}
-  </p>
-  )}
+  <div className="font-mono text-sm font-semibold text-text">
+  {listing.price === 0 ? "Free" : formatCurrency(listing.price)}
   </div>
-  <div className="flex items-center gap-2 flex-shrink-0">
+  <div className="flex items-center justify-end gap-1.5">
   <Link
   href={`/listing/${listing.id}`}
-  className="p-2 text-muted hover:text-primary transition-colors"
+  className="btn-ghost btn-sm"
   >
-  <ArrowRight className="w-4 h-4" />
+  View
   </Link>
   <DeleteListingButton id={listing.id} />
   </div>
   </div>
   ))}
   </div>
+  </div>
   ) : (
-  <div className="py-16 text-center border border-dashed border-surface-border rounded-card">
-  <Inbox className="w-12 h-12 text-muted mx-auto mb-4" />
-  <h3 className="text-lg font-semibold text-primary mb-1">
-  No listings yet
-  </h3>
-  <p className="text-muted mb-4">
-  Start selling by creating your first listing
-  </p>
-  <Link
-  href="/list"
-  className="inline-flex items-center gap-2 px-4 py-2 bg-accent text-white text-sm font-medium rounded-input hover:bg-accent-hover transition-colors"
-  >
-  <Plus className="w-4 h-4" />
-  Create Listing
+  <div className="empty-ui">
+  <div className="glyph">📭</div>
+  <h3 className="text-lg">No listings yet</h3>
+  <p className="mb-4">Start selling by creating your first listing</p>
+  <Link href="/list" className="btn-primary">
+  <Plus size={16} /> Create Listing
   </Link>
   </div>
   )}
 
   {pending.length > 0 && (
-  <div className="mt-6 flex items-center gap-3 p-4 bg-amber-500/5 border border-amber-500/10 rounded-card">
-  <Clock className="w-5 h-5 text-amber-500 flex-shrink-0" />
-  <p className="text-sm text-muted">
-  Your pending listings are under review. We will notify you once they are approved.
+  <div className="mt-6 flex items-center gap-3 p-4 bg-amber-soft border border-amber/10 rounded-lg">
+  <Clock className="w-5 h-5 text-amber flex-shrink-0" />
+  <p className="text-sm text-text-mute">
+  {pending.length} listing{pending.length > 1 ? "s" : ""} under review. Admins typically approve within 30 minutes.
   </p>
   </div>
   )}

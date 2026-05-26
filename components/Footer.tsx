@@ -1,24 +1,22 @@
 "use client";
 
-import { Store, Heart } from "lucide-react";
+import Logo from "@/components/ui/Logo";
+import Mountains from "@/components/ui/Mountains";
 
 export default function Footer() {
   return (
-  <footer className="border-t border-surface-border bg-background">
-  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-  <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-  <div className="flex items-center gap-2">
-  <Store className="w-5 h-5 text-accent" />
-  <span className="font-semibold text-primary">Campus Marketplace</span>
+  <footer className="border-t border-border bg-bg">
+  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+  <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-6">
+  <div>
+  <Logo size={28} />
+  <p className="mt-4 text-[13px] text-text-mute max-w-sm leading-relaxed">
+  A student project for IIT Mandi — Entrepreneurship & Venture Building Programme.
+  </p>
   </div>
-
-  <p className="text-sm text-muted">
-  Built for students, by students
-  </p>
-
-  <p className="text-sm text-muted flex items-center gap-1">
-  Made with <Heart className="w-3 h-3 text-red-500" /> at IIT Mandi
-  </p>
+  <div className="flex gap-6 font-mono text-xs text-text-mute tracking-wider">
+  <span>iitmandicampus.live</span>
+  </div>
   </div>
   </div>
   </footer>

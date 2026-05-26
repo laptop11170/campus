@@ -4,7 +4,7 @@ import Link from "next/link";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import StatusBadge from "@/components/StatusBadge";
 import CopyContactButton from "@/components/CopyContactButton";
-import { ArrowLeft, Phone, Mail, MessageCircle, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Phone, Mail, MessageCircle, Bookmark } from "lucide-react";
 
 export default async function ListingPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -30,8 +30,8 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
   if (!listing) {
   return (
   <div className="max-w-2xl mx-auto px-4 py-16 text-center">
-  <h1 className="text-2xl font-bold text-primary mb-2">Listing not found</h1>
-  <p className="text-muted mb-6">This listing may have been removed or does not exist.</p>
+  <h1 className="text-2xl font-bold text-text mb-2">Listing not found</h1>
+  <p className="text-text-mute mb-6">This listing may have been removed or does not exist.</p>
   <Link href="/" className="text-accent hover:underline">
   Back to marketplace
   </Link>
@@ -45,137 +45,171 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
   : null;
   const isEmail = listing.contact_info.includes("@");
 
-  const categoryColors: Record<string, string> = {
-  product: "bg-teal-500/10 text-teal-400 border-teal-500/20",
-  service: "bg-accent/10 text-accent border-accent/20",
-  event: "bg-amber-500/10 text-amber-400 border-amber-500/20",
+  const specs: Record<string, string> = {
+  Category: listing.category,
+  Posted: formatDate(listing.created_at),
+  Status: listing.status,
+  Contact: listing.contact_info,
   };
 
   return (
-  <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
   <Link
   href="/"
-  className="inline-flex items-center gap-1 text-sm text-muted hover:text-primary transition-colors mb-6"
+  className="inline-flex items-center gap-1 text-sm text-text-mute hover:text-text transition-colors mb-6"
   >
   <ArrowLeft className="w-4 h-4" />
   Back to marketplace
   </Link>
 
-  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+  <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-8 mb-10">
   {/* Image */}
-  <div className="aspect-[4/3] bg-surface border border-surface-border rounded-card overflow-hidden">
+  <div>
+  <div className="aspect-[5/4] rounded-xl overflow-hidden bg-surface border border-border relative">
   {listing.photo_url ? (
   <Image
   src={listing.photo_url}
   alt={listing.title}
-  width={600}
-  height={450}
-  className="w-full h-full object-cover"
+  fill
+  className="object-cover"
   />
   ) : (
-  <div className="flex items-center justify-center h-full">
-  <span className="text-muted">No image</span>
+  <div className={`thumb-ui thumb-${listing.category} w-full h-full`}>
+  <span style={{ fontSize: 120, color: "rgba(0,0,0,0.5)" }}>
+  {listing.category === "product" ? "🛒" : listing.category === "service" ? "🔧" : listing.category === "event" ? "🎪" : "📚"}
+  </span>
   </div>
   )}
-  </div>
-
-  {/* Details */}
-  <div className="space-y-4">
-  <div className="flex items-center gap-2">
-  <span
-  className={`px-2.5 py-1 text-xs font-medium rounded-md border ${
-  categoryColors[listing.category]
-  }`}
-  >
-  {listing.category.charAt(0).toUpperCase() + listing.category.slice(1)}
-  </span>
   {listing.is_featured && (
-  <span className="px-2.5 py-1 text-xs font-medium rounded-md bg-accent text-white">
+  <span className="absolute top-3 left-3 bg-text text-bg font-mono text-[10px] font-semibold tracking-[0.12em] px-2 py-[3px] rounded-sm uppercase">
   Featured
   </span>
   )}
-  <StatusBadge status={listing.status} />
+  <button className="absolute top-3 right-3 w-9 h-9 rounded-full grid place-items-center bg-black/40 text-white backdrop-blur-sm hover:bg-black/60 transition-colors">
+  <Bookmark size={15} />
+  </button>
+  </div>
   </div>
 
-  <h1 className="text-2xl font-bold text-primary">{listing.title}</h1>
-
-  <p className="text-3xl font-bold text-accent">
-  {listing.price_label || formatCurrency(listing.price)}
-  </p>
-
-  <div className="bg-surface border border-surface-border rounded-card p-4">
-  <h3 className="text-sm font-medium text-muted mb-2">Description</h3>
-  <p className="text-primary whitespace-pre-line">{listing.description}</p>
+  {/* Details side */}
+  <div className="flex flex-col gap-5">
+  <div>
+  <div className="flex items-center gap-2 mb-3">
+  <span className="chip-ui capitalize">{listing.category}</span>
+  {listing.is_featured && <span className="chip-ui chip-featured">Featured</span>}
+  <span className="font-mono text-xs text-text-mute ml-auto">{formatDate(listing.created_at)}</span>
+  </div>
+  <h1 className="text-2xl sm:text-[32px] font-semibold tracking-tight leading-tight">
+  {listing.title}
+  </h1>
   </div>
 
-  {/* Seller */}
-  <div className="flex items-center gap-3 py-3 border-t border-surface-border">
+  <div className="flex items-baseline gap-3">
+  <div className="font-mono text-[44px] font-semibold tracking-tight text-text">
+  {listing.price === 0 ? "Free" : `₹${(listing.price || 0).toLocaleString("en-IN")}`}
+  </div>
+  {listing.price_label && (
+  <div className="text-text-mute text-sm font-mono">{listing.price_label}</div>
+  )}
+  </div>
+
+  {/* CTA buttons */}
+  <div className="flex gap-2">
+  <Link
+  href={whatsappLink || (isEmail ? `mailto:${listing.contact_info}` : `tel:${listing.contact_info}`)}
+  target={whatsappLink ? "_blank" : undefined}
+  className="btn-primary flex-1 py-3 text-base justify-center"
+  >
+  <MessageCircle size={18} />
+  {listing.category === "event" ? "RSVP" : listing.category === "learning" ? "Enroll" : "Message seller"}
+  </Link>
+  <button className="btn-ghost icon-btn w-11 h-11 rounded-md" aria-label="Save">
+  <Bookmark size={18} />
+  </button>
+  <Link
+  href={isEmail ? `mailto:${listing.contact_info}` : `tel:${listing.contact_info}`}
+  className="btn-ghost icon-btn w-11 h-11 rounded-md"
+  aria-label="Contact"
+  >
+  <Phone size={18} />
+  </Link>
+  </div>
+
+  {/* Seller card */}
+  <div className="card-ui p-4 flex items-center gap-3.5">
   {listing.profiles?.avatar_url ? (
   <Image
   src={listing.profiles.avatar_url}
   alt=""
-  width={40}
-  height={40}
+  width={44}
+  height={44}
   className="rounded-full"
   />
   ) : (
-  <div className="w-10 h-10 rounded-full bg-surface-border flex items-center justify-center">
-  <span className="text-sm text-muted">
+  <div className="avatar-ui bg-surface-3 text-text-2" style={{ width: 44, height: 44, fontSize: 15 }}>
   {(listing.profiles?.full_name || "U").charAt(0).toUpperCase()}
-  </span>
   </div>
   )}
-  <div>
-  <p className="text-sm font-medium text-primary">
-  {listing.profiles?.full_name || "Anonymous"}
-  </p>
-  <p className="text-xs text-muted">
-  Listed on {formatDate(listing.created_at)}
-  </p>
+  <div className="flex-1">
+  <div className="font-semibold text-[15px]">{listing.profiles?.full_name || "Anonymous"}</div>
+  <div className="text-text-mute text-xs font-mono">Student · IIT Mandi</div>
+  </div>
+  <div className="text-right">
+  <div className="stars-ui text-sm">★★★★★</div>
+  <div className="text-text-mute text-[11px] font-mono mt-1">Verified</div>
   </div>
   </div>
 
-  {/* Contact */}
-  <div className="space-y-2">
-  <h3 className="text-sm font-medium text-muted">Contact Seller</h3>
+  {/* Specs */}
+  <div>
+  <div className="eyebrow-ui mb-1">DETAILS</div>
+  {Object.entries(specs).map(([k, v]) => (
+  <div key={k} className="grid grid-cols-[130px_1fr] gap-4 py-3.5 border-b border-divider text-sm">
+  <div className="text-text-mute font-mono text-xs tracking-wider uppercase">{k}</div>
+  <div className="text-text">{k === "Status" ? <StatusBadge status={v as any} /> : v}</div>
+  </div>
+  ))}
+  </div>
+  </div>
+  </div>
+
+  {/* Description */}
+  {listing.description && (
+  <div className="mb-10">
+  <div className="eyebrow-ui mb-3">DESCRIPTION</div>
+  <p className="text-base leading-relaxed text-text-2 max-w-3xl whitespace-pre-line">
+  {listing.description}
+  </p>
+  </div>
+  )}
+
+  {/* Contact section */}
+  <div className="card-ui p-5 sm:p-6">
+  <div className="eyebrow-ui mb-3">CONTACT SELLER</div>
   <div className="flex flex-wrap gap-2">
   {whatsappLink && (
   <a
   href={whatsappLink}
   target="_blank"
   rel="noopener noreferrer"
-  className="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 rounded-input text-sm font-medium hover:bg-emerald-500/20 transition-colors"
+  className="btn-ghost"
   >
-  <MessageCircle className="w-4 h-4" />
+  <MessageCircle size={16} />
   WhatsApp
   </a>
   )}
   {isEmail ? (
-  <a
-  href={`mailto:${listing.contact_info}`}
-  className="inline-flex items-center gap-2 px-4 py-2.5 bg-accent/10 text-accent border border-accent/20 rounded-input text-sm font-medium hover:bg-accent/20 transition-colors"
-  >
-  <Mail className="w-4 h-4" />
+  <a href={`mailto:${listing.contact_info}`} className="btn-ghost">
+  <Mail size={16} />
   Email
   </a>
   ) : (
-  <a
-  href={`tel:${listing.contact_info}`}
-  className="inline-flex items-center gap-2 px-4 py-2.5 bg-accent/10 text-accent border border-accent/20 rounded-input text-sm font-medium hover:bg-accent/20 transition-colors"
-  >
-  <Phone className="w-4 h-4" />
+  <a href={`tel:${listing.contact_info}`} className="btn-ghost">
+  <Phone size={16} />
   Call
   </a>
   )}
   <CopyContactButton contact={listing.contact_info} />
-  </div>
-  </div>
-
-  {/* Report */}
-  <button className="inline-flex items-center gap-1.5 text-sm text-red-400 hover:text-red-300 transition-colors">
-  <AlertTriangle className="w-4 h-4" />
-  Report this listing
-  </button>
   </div>
   </div>
   </div>

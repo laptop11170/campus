@@ -51,9 +51,9 @@ export default async function RootLayout({
   appearance={{
   baseTheme: dark,
   variables: {
-  colorPrimary: "#7c3aed",
-  colorBackground: "#111111",
-  colorText: "#f9f9f9",
+  colorPrimary: "#c6f74a",
+  colorBackground: "#16151a",
+  colorText: "#f4f1ec",
   },
   }}
   >

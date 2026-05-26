@@ -1,35 +1,42 @@
 "use client";
 
 import { ListingStatus } from "@/types";
-import { cn } from "@/lib/utils";
 
 interface StatusBadgeProps {
   status: ListingStatus;
   className?: string;
 }
 
-const statusStyles: Record<ListingStatus, string> = {
-  pending: "bg-amber-500/10 text-amber-500 border-amber-500/20",
-  approved: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
-  rejected: "bg-red-500/10 text-red-500 border-red-500/20",
-};
-
-const statusLabels: Record<ListingStatus, string> = {
-  pending: "Pending",
-  approved: "Approved",
-  rejected: "Rejected",
-};
-
 export default function StatusBadge({ status, className }: StatusBadgeProps) {
+  const styles: Record<ListingStatus, { chip: string; dot: string }> = {
+  pending: {
+  chip: "bg-amber-soft text-amber",
+  dot: "bg-amber",
+  },
+  approved: {
+  chip: "bg-accent-soft text-accent",
+  dot: "bg-accent",
+  },
+  rejected: {
+  chip: "bg-danger-soft text-danger",
+  dot: "bg-danger",
+  },
+  };
+
+  const labels: Record<ListingStatus, string> = {
+  pending: "Pending",
+  approved: "Live",
+  rejected: "Rejected",
+  };
+
+  const s = styles[status];
+
   return (
   <span
-  className={cn(
-  "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border",
-  statusStyles[status],
-  className
-  )}
+  className={`inline-flex items-center gap-1.5 font-mono text-[11px] tracking-wider uppercase px-2.5 py-1 rounded-sm border border-transparent ${s.chip} ${className || ""}`}
   >
-  {statusLabels[status]}
+  <span className={`w-1.5 h-1.5 rounded-full ${s.dot}`} />
+  {labels[status]}
   </span>
   );
 }
